@@ -1,0 +1,28 @@
+# Backend Dependencies
+# Emotion-Aware AI Healthcare Assistant
+
+# Web framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+websockets==12.0
+
+# Machine Learning
+tensorflow==2.15.0
+transformers==4.37.0
+torch==2.1.2
+
+# Image processing
+opencv-python==4.9.0.80
+numpy==1.26.3
+Pillow==10.2.0
+
+# HTTP client for Ollama
+aiohttp==3.9.1
+
+# Data validation
+pydantic==2.5.3
+
+# Utilities
+python-multipart==0.0.6
+python-dotenv==1.0.1
+motor==3.3.2
