@@ -43,7 +43,7 @@ class ConversationMemoryManager:
             logger.error(f"Error creating session: {e}")
             return str(ObjectId()) # Fallback to random ID if DB fails
             
-    async def get_history(self, session_id: str, max_turns: int = 10) -> List[Dict]:
+    async def get_history(self, session_id: str, max_turns: int = 5) -> List[Dict]:
         """Get conversation history for a session"""
         try:
             if not ObjectId.is_valid(session_id):
@@ -62,6 +62,9 @@ class ConversationMemoryManager:
             
             formatted_messages = []
             for msg in stored_messages:
+                # Skip soft-deleted messages
+                if msg.get("deleted"):
+                    continue
                 formatted_messages.append({
                     "role": msg["role"],
                     "content": msg["content"],

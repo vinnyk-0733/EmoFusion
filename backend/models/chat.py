@@ -35,6 +35,8 @@ class Message(BaseModel):
     content: str
     emotion: Optional[str] = None
     mental_state: Optional[str] = None
+    deleted: Optional[bool] = None
+    liked: Optional[bool] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
 class Chat(BaseModel):

@@ -56,7 +56,7 @@ EMOTION_TO_MENTAL_STATE = {
 
 # Ollama configuration
 OLLAMA_BASE_URL = "http://localhost:11434"
-OLLAMA_MODEL = "mistral:7b"
+OLLAMA_MODEL = "mistral:7b-instruct-q4_K_M"
 
 # MongoDB Configuration
 import os

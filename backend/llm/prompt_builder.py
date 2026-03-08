@@ -35,12 +35,13 @@ def build_system_prompt(
         """
         
         response_format = f"""
-    RESPONSE FORMAT (STRICT):
-    1. Start with "EmoAI: ".
-    2. Then, explicitly state what you observe in ONE sentence:
-       - If Mismatch (e.g. Happy Face, Sad Text): "EmoAI: You say you are [Text Tone], but you look [Face Emotion]..."
-       - If Match: "EmoAI: You sound [Text Tone] and you look [Face Emotion]..."
-    3. Then, provide your main response.
+    RESPONSE FORMAT:
+    1. If there's a MISMATCH between face and text emotion (e.g., Happy Face + Sad Text):
+       - Gently acknowledge it ONCE: "You say you're [Text Tone], but you look [Face Emotion]..."
+       - Then provide your main response.
+    2. If emotions MATCH or haven't changed from the previous message:
+       - Do NOT repeat the emotion observation. Just respond naturally.
+    3. Never start with "EmoAI:" — respond as a natural, caring companion.
         """
         
     else:
@@ -53,11 +54,11 @@ def build_system_prompt(
         """
         
         response_format = f"""
-    RESPONSE FORMAT (STRICT):
-    1. Start with "EmoAI: ".
-    2. Then, state only what you hear/read:
-       - "EmoAI: You sound [Text Tone]..."
-    3. Then, provide your main response.
+    RESPONSE FORMAT:
+    1. Only mention the user's emotion if it has CHANGED or is notably strong.
+       - If emotion changed: "You sound [Text Tone]..." then respond.
+       - If emotion is the same as before: Just respond naturally without restating it.
+    2. Never start with "EmoAI:" — respond as a natural, caring companion.
         """
 
     # --- 3. Intent Logic (Advice vs Suggestion vs Chat) ---
@@ -109,7 +110,7 @@ def build_user_prompt(
     # Build history context
     if conversation_history:
         history_text = "\n\nPREVIOUS CONVERSATION:\n"
-        for msg in conversation_history[-6:]:  # Last 3 exchanges
+        for msg in conversation_history[-4:]:  # Last 2 exchanges
             role = msg.get("role", "").upper()
             content = msg.get("content", "")
             emotion_note = f" [Feeling: {msg.get('emotion', '')}]" if msg.get("emotion") else ""

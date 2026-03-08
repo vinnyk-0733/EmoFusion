@@ -16,7 +16,7 @@ const VoiceChatInput = ({ value, onChange, onSend, onStop, isGenerating = false,
     onError: (errorMessage) => { toast({ variant: 'destructive', title: 'Voice Input Error', description: errorMessage }); setIsProcessing(false); },
     onEnd: () => { setIsProcessing(false); },
     continuous: false,
-    language: 'en-US',
+    language: 'en-IN',
   });
 
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (value.trim() && !disabled && !isGenerating) onSend(); } };

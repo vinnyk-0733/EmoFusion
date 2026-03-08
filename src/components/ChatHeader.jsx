@@ -162,16 +162,6 @@ const ChatHeader = ({
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground"
-        >
-          <Heart className="w-3 h-3 text-destructive" />
-          <span>For emotional support only. Not a substitute for professional medical advice.</span>
-        </motion.div>
       </div>
     </motion.div>
   );

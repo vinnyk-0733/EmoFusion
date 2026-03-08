@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Brain, Heart, MessageSquare, BarChart3, Volume2, VolumeX, Wind, MoreHorizontal, Lightbulb, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiService } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import SettingsDrawer from '@/components/SettingsDrawer';
@@ -46,7 +47,7 @@ const Index = () => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [favoritedMessages, setFavoritedMessages] = useState(new Set());
+  // Liked state is now stored on each message.liked in DB
   const [mobileTab, setMobileTab] = useState('chat');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -290,7 +291,7 @@ const Index = () => {
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="glass-card rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-2 sm:mb-4 overflow-visible relative z-50">
+          <header className="glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 overflow-visible relative z-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <MiniAILogo size={40} />
@@ -373,13 +374,7 @@ const Index = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <div className="flex items-center justify-center gap-2 mt-3 text-xs text-muted-foreground">
-              <Heart className="w-3 h-3 text-destructive" />
-              <span className="text-center">For emotional support only. Not a substitute for professional medical advice.</span>
-            </div>
           </header>
-
           {activeTab === 'chat' ? (
             <>
               <div
@@ -402,8 +397,8 @@ const Index = () => {
                   </div>
                 ) : (
                   <>
-                    {messages.map((msg) => (
-                      <SwipeableChatMessage key={msg.id} message={msg} speechSynthesis={speechSynthesis} onDelete={deleteMessage} onFavorite={(id) => { setFavoritedMessages(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }} isFavorited={favoritedMessages.has(msg.id)} isNew={msg.id === newestMessageId && msg.role === 'assistant'} />
+                    {messages.map((msg, index) => (
+                      <SwipeableChatMessage key={msg.id} message={msg} speechSynthesis={speechSynthesis} onDelete={(id) => { deleteMessage(id, index); chat.setMessages(prev => prev.map(m => m.id === id ? { ...m, deleted: true } : m)); }} onFavorite={(id) => { apiService.toggleLikeMessage(activeConversationId, index).catch(console.error); chat.setMessages(prev => prev.map(m => m.id === id ? { ...m, liked: !m.liked } : m)); }} isFavorited={!!msg.liked} isNew={msg.id === newestMessageId && msg.role === 'assistant'} />
                     ))}
                     {chat.isTyping && (
                       <div className="flex gap-1.5 p-4">

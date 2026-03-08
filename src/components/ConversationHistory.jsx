@@ -81,17 +81,6 @@ const ConversationHistory = ({ conversations, activeConversationId, onSelectConv
           )}
         </div>
       </ScrollArea>
-      {conversations.length > 0 && (
-        <div className="p-3 border-t border-border">
-          <AlertDialog>
-            <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4 mr-2" />Clear All History</Button></AlertDialogTrigger>
-            <AlertDialogContent className="bg-card border-border">
-              <AlertDialogHeader><AlertDialogTitle>Clear all conversations?</AlertDialogTitle><AlertDialogDescription>This will permanently delete all {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={onClearAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete All</AlertDialogAction></AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      )}
     </div>
   );
 };

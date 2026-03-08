@@ -61,6 +61,11 @@ async def update_chat(id: str, request: UpdateChatRequest = Body(...)):
         
     raise HTTPException(status_code=404, detail=f"Chat {id} not found")
 
+@router.delete("/all", response_description="Delete all chats")
+async def delete_all_chats():
+    result = await get_collection().delete_many({})
+    return {"message": f"Deleted {result.deleted_count} chats"}
+
 @router.delete("/{id}", response_description="Delete a chat")
 async def delete_chat(id: str):
     if not ObjectId.is_valid(id):
@@ -72,3 +77,48 @@ async def delete_chat(id: str):
         return {"message": "Chat deleted"}
         
     raise HTTPException(status_code=404, detail=f"Chat {id} not found")
+
+@router.delete("/{id}/messages/{msg_index}", response_description="Soft-delete a message")
+async def soft_delete_message(id: str, msg_index: int):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid chat ID")
+    
+    chat = await get_collection().find_one({"_id": ObjectId(id)})
+    if not chat:
+        raise HTTPException(status_code=404, detail=f"Chat {id} not found")
+    
+    messages = chat.get("messages", [])
+    if msg_index < 0 or msg_index >= len(messages):
+        raise HTTPException(status_code=400, detail="Invalid message index")
+    
+    # Soft-delete: set deleted flag on the message
+    update_key = f"messages.{msg_index}.deleted"
+    await get_collection().update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {update_key: True, "updated_at": datetime.now()}}
+    )
+    
+    return {"message": "Message deleted"}
+
+@router.put("/{id}/messages/{msg_index}/like", response_description="Toggle like on a message")
+async def toggle_like_message(id: str, msg_index: int):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid chat ID")
+    
+    chat = await get_collection().find_one({"_id": ObjectId(id)})
+    if not chat:
+        raise HTTPException(status_code=404, detail=f"Chat {id} not found")
+    
+    messages = chat.get("messages", [])
+    if msg_index < 0 or msg_index >= len(messages):
+        raise HTTPException(status_code=400, detail="Invalid message index")
+    
+    # Toggle liked flag
+    current_liked = messages[msg_index].get("liked", False)
+    update_key = f"messages.{msg_index}.liked"
+    await get_collection().update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {update_key: not current_liked, "updated_at": datetime.now()}}
+    )
+    
+    return {"message": "Message liked" if not current_liked else "Message unliked", "liked": not current_liked}

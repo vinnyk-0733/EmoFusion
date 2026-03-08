@@ -65,6 +65,45 @@ export const apiService = {
       console.error('API Error:', error);
       throw error;
     }
+  },
+
+  softDeleteMessage: async (chatId, msgIndex) => {
+    try {
+      const response = await fetch(`${API_URL}/chats/${chatId}/messages/${msgIndex}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete message');
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+
+  deleteAllChats: async () => {
+    try {
+      const response = await fetch(`${API_URL}/chats/all`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete all chats');
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+
+  toggleLikeMessage: async (chatId, msgIndex) => {
+    try {
+      const response = await fetch(`${API_URL}/chats/${chatId}/messages/${msgIndex}/like`, {
+        method: 'PUT',
+      });
+      if (!response.ok) throw new Error('Failed to toggle like');
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
   }
 };
 

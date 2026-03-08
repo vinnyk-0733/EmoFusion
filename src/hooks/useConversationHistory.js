@@ -120,32 +120,17 @@ export const useConversationHistory = () => {
   }, [activeConversationId, toast]);
 
   const clearAllConversations = useCallback(async () => {
-    // We don't have a clear all API yet, so we delete one by one or implementing it later.
-    // For now, let's just warn or handle client side for the UI but we should probably loop delete?
-    // Or just implement a bulk delete API. 
-    // Given the task scope, let's just loop delete for now or skip implementation.
-    // The user asked for "delete a particular chat", "create new chat".
-    // "Clear all" is in the UI but maybe less critical.
-
-    // Attempt to delete all locally known
-    // Warning: this could be slow
-    // For now, let's just reset local state and maybe implement backend endpoint if requested.
-    // Correct approach: Add endpoint. But I didn't add it.
-    // I'll leave it as a "not implemented" or try to delete visible ones.
-
-    // To match previous behavior (clearing local storage), we should probably delete all.
-    // But since this is persistent, "Clear All" is dangerous.
-
-    if (confirm("Are you sure you want to delete ALL chats? This will delete them from the database.")) {
-      // Naive implementation
-      for (const conv of conversations) {
-        await apiService.deleteChat(conv.id);
-      }
+    try {
+      await apiService.deleteAllChats();
       setConversations([]);
       setActiveConversationId(null);
       setActiveConversation(null);
+      toast({ title: "Cleared", description: "All conversations have been deleted", duration: 3000 });
+    } catch (e) {
+      console.error('Failed to clear all chats:', e);
+      toast({ title: "Error", description: "Could not delete all chats", variant: "destructive" });
     }
-  }, [conversations]);
+  }, [toast]);
 
   const renameConversation = useCallback(async (id, newTitle) => {
     try {
@@ -179,9 +164,14 @@ export const useConversationHistory = () => {
     });
   }, [activeConversationId]);
 
-  const deleteMessage = useCallback((messageId) => {
-    // Not implemented in backend yet for single message deletion
-  }, []);
+  const deleteMessage = useCallback(async (messageId, messageIndex) => {
+    if (!activeConversationId) return;
+    try {
+      await apiService.softDeleteMessage(activeConversationId, messageIndex);
+    } catch (e) {
+      console.error('Failed to delete message from DB:', e);
+    }
+  }, [activeConversationId]);
 
   return {
     conversations,
