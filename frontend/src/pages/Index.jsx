@@ -296,8 +296,8 @@ const Index = () => {
               <div className="flex items-center gap-3">
                 <MiniAILogo size={40} />
                 <div>
-                  <h1 className="text-lg font-bold text-primary">Emotion AI</h1>
-                  <p className="text-xs text-muted-foreground">Healthcare Assistant</p>
+                  <h1 className="text-lg font-bold text-primary">EmoFusion</h1>
+                  <p className="text-xs text-muted-foreground">Emotion Healthcare Assistant</p>
                 </div>
               </div>
 
@@ -393,7 +393,7 @@ const Index = () => {
                 {messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center">
                     <RobotMascot size={120} />
-                    <h3 className="text-xl font-semibold mb-2 text-primary select-none">Welcome to Emotion AI</h3>
+                    <h3 className="text-xl font-semibold mb-2 text-primary select-none">Welcome to EmoFusion</h3>
                   </div>
                 ) : (
                   <>

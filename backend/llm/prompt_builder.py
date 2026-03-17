@@ -83,6 +83,7 @@ def build_system_prompt(
 
 General Rules:
 - Be natural and human-like.
+- Keep responses concise — 2 to 3 sentences max unless the user asks for detail.
 - Prioritize the 'Mental State' for your emotional tone.
 - If Camera is ON and there is a mismatch, believe the FACE (Masking).
 """
@@ -110,7 +111,7 @@ def build_user_prompt(
     # Build history context
     if conversation_history:
         history_text = "\n\nPREVIOUS CONVERSATION:\n"
-        for msg in conversation_history[-4:]:  # Last 2 exchanges
+        for msg in conversation_history[-2:]:  # Last 1 exchange
             role = msg.get("role", "").upper()
             content = msg.get("content", "")
             emotion_note = f" [Feeling: {msg.get('emotion', '')}]" if msg.get("emotion") else ""

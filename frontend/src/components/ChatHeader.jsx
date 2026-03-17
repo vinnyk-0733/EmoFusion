@@ -100,8 +100,8 @@ const ChatHeader = ({
           <div className="flex items-center gap-3">
             <MiniAILogo size={40} />
             <div>
-              <h1 className="text-lg font-bold gradient-text">Emotion AI</h1>
-              <p className="text-xs text-muted-foreground">Healthcare Assistant</p>
+              <h1 className="text-lg font-bold gradient-text">EmoFusion</h1>
+              <p className="text-xs text-muted-foreground">Emotion Healthcare Assistant</p>
             </div>
           </div>
 

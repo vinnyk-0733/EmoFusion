@@ -1,7 +1,7 @@
 // WebSocket Service for Real-time Chat Communication
 // Connects to FastAPI backend for emotion-aware AI responses
 
-const DEFAULT_WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/chat';
+const DEFAULT_WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8002/ws/chat';
 
 class WebSocketService {
   constructor(config = {}) {

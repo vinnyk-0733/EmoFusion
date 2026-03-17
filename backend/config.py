@@ -54,9 +54,9 @@ EMOTION_TO_MENTAL_STATE = {
     "disgust": "Discomfort"
 }
 
-# Ollama configuration
-OLLAMA_BASE_URL = "http://localhost:11434"
-OLLAMA_MODEL = "mistral:7b-instruct-q4_K_M"
+# llama.cpp server configuration
+LLAMA_SERVER_URL = "http://localhost:8081"
+GGUF_MODEL_PATH = "../model/ministral3b-q4.gguf"
 
 # MongoDB Configuration
 import os

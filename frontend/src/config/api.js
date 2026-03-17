@@ -3,7 +3,7 @@
 
 export const API_CONFIG = {
   // FastAPI backend base URL
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002',
   
   // Endpoints
   endpoints: {

@@ -35,7 +35,7 @@ const MessageContainer = ({ messages, isTyping, onLoadMore, onDeleteMessage, onF
       {messages.length === 0 && !isTyping && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-full text-center py-12">
           <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity }} className="text-6xl mb-4">🤖</motion.div>
-          <h3 className="text-xl font-semibold mb-2 gradient-text">Welcome to Emotion AI</h3>
+          <h3 className="text-xl font-semibold mb-2 gradient-text">Welcome to EmoFusion</h3>
           <p className="text-muted-foreground max-w-md">I'm your emotion-aware AI assistant. Enable your camera and start chatting—I'll understand not just your words, but how you're feeling.</p>
         </motion.div>
       )}
