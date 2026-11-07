@@ -24,6 +24,7 @@ export const useConversationHistory = () => {
   }, [activeConversationId]);
 
   const fetchConversations = async () => {
+    setIsLoading(true);
     try {
       const chats = await apiService.getChats();
       // Map backend fields to frontend expected fields if necessary
@@ -38,9 +39,18 @@ export const useConversationHistory = () => {
       }));
 
       setConversations(formattedChats);
+      if (formattedChats.length > 0) {
+        if (!activeConversationId) {
+          setActiveConversationId(formattedChats[0].id);
+        }
+      } else {
+        await startNewConversation();
+      }
     } catch (e) {
       console.error('Failed to fetch conversations:', e);
       toast({ title: "Error", description: "Could not load chat history", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,6 +91,11 @@ export const useConversationHistory = () => {
   };
 
   const startNewConversation = useCallback(async () => {
+    // If current conversation is already an unsent/empty chat, reuse it
+    if (activeConversation && (!activeConversation.messages || activeConversation.messages.length === 0)) {
+      return activeConversation.id;
+    }
+
     try {
       const newChat = await apiService.createChat("New Chat");
       const formattedChat = {
@@ -99,7 +114,7 @@ export const useConversationHistory = () => {
       toast({ title: "Error", description: "Could not create new chat", variant: "destructive" });
       return null;
     }
-  }, [toast]);
+  }, [activeConversation, toast]);
 
   const selectConversation = useCallback((id) => {
     setActiveConversationId(id);

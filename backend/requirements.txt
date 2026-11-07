@@ -16,8 +16,9 @@ opencv-contrib-python>=4.9.0
 numpy==1.26.3
 Pillow==10.2.0
 
-# HTTP client for Ollama
-aiohttp==3.9.1
+# LLM via LangChain + Gemini API
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
 
 # Data validation
 pydantic==2.5.3
@@ -26,3 +27,4 @@ pydantic==2.5.3
 python-multipart==0.0.6
 python-dotenv==1.0.1
 motor==3.3.2
+pymongo==4.8.0

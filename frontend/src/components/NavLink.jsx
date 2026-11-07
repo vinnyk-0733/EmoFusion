@@ -1,16 +1,21 @@
-import { NavLink as RouterNavLink } from "react-router-dom";
+'use client';
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 const NavLink = forwardRef(
-  ({ className, activeClassName, pendingClassName, to, ...props }, ref) => {
+  ({ className, activeClassName, to, href, ...props }, ref) => {
+    const pathname = usePathname();
+    const target = href || to || "/";
+    const isActive = pathname === target;
+
     return (
-      <RouterNavLink
+      <Link
         ref={ref}
-        to={to}
-        className={({ isActive, isPending }) =>
-          cn(className, isActive && activeClassName, isPending && pendingClassName)
-        }
+        href={target}
+        className={cn(className, isActive && activeClassName)}
         {...props}
       />
     );

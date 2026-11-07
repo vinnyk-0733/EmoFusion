@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 
@@ -14,17 +16,20 @@ const STORAGE_KEY = 'accessibility-settings';
 const AccessibilityContext = createContext(undefined);
 
 export const AccessibilityProvider = ({ children }) => {
-  const [settings, setSettings] = useState(() => {
+  const [settings, setSettings] = useState(defaultSettings);
+
+  useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return { ...defaultSettings, ...JSON.parse(stored) };
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          setSettings({ ...defaultSettings, ...JSON.parse(stored) });
+        }
       }
     } catch (e) {
       console.warn('Failed to load accessibility settings:', e);
     }
-    return defaultSettings;
-  });
+  }, []);
 
   // Apply settings to document
   useEffect(() => {
@@ -78,7 +83,11 @@ export const AccessibilityProvider = ({ children }) => {
 export const useAccessibility = () => {
   const context = useContext(AccessibilityContext);
   if (!context) {
-    throw new Error('useAccessibility must be used within an AccessibilityProvider');
+    return {
+      settings: defaultSettings,
+      updateSetting: () => {},
+      resetSettings: () => {},
+    };
   }
   return context;
 };

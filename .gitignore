@@ -23,7 +23,27 @@ dist-ssr
 *.sln
 *.sw?
 .env
-model
-llama.cpp
+# Machine Learning Models (TER and FER)
+backend/app/modules/emotion/models/ter_model/
+backend/app/modules/emotion/models/fer_model_fixed.h5
+backend/app/modules/emotion/models/*.h5
+backend/app/modules/emotion/models/*.keras
+**/ter_model/
+*.h5
+*.keras
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Next.js
+frontend/.next/
+frontend/out/
+.next/
+
+# Other models and dependencies
+model/
+models/
+llama.cpp/
 
 real_latency_graph.png

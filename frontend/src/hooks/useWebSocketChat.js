@@ -239,8 +239,12 @@ export const useWebSocketChat = () => {
     imageBase64
   ) => {
     if (!wsService.isConnected) {
-      setError('Not connected to server');
-      return;
+      try {
+        await wsService.connect();
+      } catch (err) {
+        setError('Not connected to server');
+        return;
+      }
     }
 
     // Add user message immediately
