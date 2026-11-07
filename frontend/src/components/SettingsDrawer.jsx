@@ -9,7 +9,12 @@ import { THEMES } from '@/types/theme';
 import { useAccessibility } from '@/context/AccessibilityContext';
 
 const SettingCard = ({ icon, label, description, htmlFor, children }) => (
-  <label htmlFor={htmlFor} className="glass-card p-4 rounded-xl focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background transition-colors duration-200 cursor-pointer flex items-center justify-between" role="group" aria-labelledby={`${htmlFor}-label`}>
+  <label
+    htmlFor={htmlFor}
+    className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 cursor-pointer flex items-center justify-between"
+    role="group"
+    aria-labelledby={`${htmlFor}-label`}
+  >
     <div className="flex items-center gap-3">
       {icon}
       <div>
@@ -68,11 +73,11 @@ const SettingsDrawer = ({ currentTheme, onThemeChange, cameraOn, onCameraToggle,
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Toggle settings" className="relative h-10 w-10 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-300 hover:shadow-glow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+        <Button variant="ghost" size="icon" aria-label="Toggle settings" className="relative h-10 w-10 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
           <Settings className="h-5 w-5 text-primary" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[340px] sm:w-[400px] overflow-y-auto no-scrollbar bg-card border-border z-[150] fixed top-0 right-0 h-full transition-transform duration-500 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right" aria-describedby="settings-description">
+      <SheetContent side="right" className="w-[340px] sm:w-[400px] overflow-y-auto no-scrollbar bg-[#ebf0f7] dark:bg-[#151922] border-l border-slate-200 dark:border-slate-800 z-[150] fixed top-0 right-0 h-full transition-transform duration-500 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right" aria-describedby="settings-description">
         <SheetHeader className="mb-6"><SheetTitle className="text-xl gradient-text">Settings</SheetTitle><SheetDescription id="settings-description">Customize your experience with themes, camera, and accessibility options.</SheetDescription></SheetHeader>
         <div className="space-y-8" role="main">
 
@@ -197,7 +202,7 @@ const SettingsDrawer = ({ currentTheme, onThemeChange, cameraOn, onCameraToggle,
               <SettingCard icon={<Sun className="h-5 w-5 text-muted-foreground" />} label="High Contrast" description="Black/white with yellow accents" htmlFor="high-contrast"><div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{settings.highContrast ? 'On' : 'Off'}</span><Switch id="high-contrast" checked={settings.highContrast} onCheckedChange={(checked) => updateSetting('highContrast', checked)} aria-describedby="high-contrast-desc" /></div></SettingCard>
               <SettingCard icon={<Type className="h-5 w-5 text-muted-foreground" />} label="Large Text" description="Minimum 125% font size" htmlFor="large-text"><div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{settings.largeText ? 'On' : 'Off'}</span><Switch id="large-text" checked={settings.largeText} onCheckedChange={(checked) => updateSetting('largeText', checked)} aria-describedby="large-text-desc" /></div></SettingCard>
               <SettingCard icon={settings.soundEnabled ? <Volume2 className="h-5 w-5 text-muted-foreground" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />} label="Sound Effects" description="Enable notification sounds" htmlFor="sound-toggle"><div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{settings.soundEnabled ? 'On' : 'Off'}</span><Switch id="sound-toggle" checked={settings.soundEnabled} onCheckedChange={(checked) => updateSetting('soundEnabled', checked)} aria-describedby="sound-toggle-desc" /></div></SettingCard>
-              <div className="glass-card p-4 rounded-xl focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background" role="group" aria-labelledby="font-size-label">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-sm" role="group" aria-labelledby="font-size-label">
                 <div className="space-y-4"><div className="flex items-center gap-3"><Type className="h-5 w-5 text-muted-foreground" /><div className="flex-1"><Label id="font-size-label" htmlFor="font-size-slider" className="text-sm font-medium">Font Size: {settings.fontSize}%</Label><p id="font-size-desc" className="text-xs text-muted-foreground">Adjust the base font size</p></div></div><Slider id="font-size-slider" value={[settings.fontSize]} onValueChange={([value]) => updateSetting('fontSize', value)} min={75} max={150} step={5} className="w-full" aria-labelledby="font-size-label" aria-describedby="font-size-desc" /><div className="flex justify-between text-xs text-muted-foreground"><span>75%</span><span>100%</span><span>150%</span></div></div>
               </div>
             </div>

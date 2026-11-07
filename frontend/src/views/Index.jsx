@@ -1,11 +1,40 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Brain, Heart, MessageSquare, BarChart3, Volume2, VolumeX, Wind, MoreHorizontal, Lightbulb, History } from 'lucide-react';
+import {
+  Brain,
+  Heart,
+  MessageSquare,
+  BarChart3,
+  Volume2,
+  VolumeX,
+  Wind,
+  MoreHorizontal,
+  Lightbulb,
+  History,
+  Sun,
+  Moon,
+  Trash2,
+  Sparkles
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import SettingsDrawer from '@/components/SettingsDrawer';
 import ConversationHistory from '@/components/ConversationHistory';
 import VoiceChatInput from '@/components/VoiceChatInput';
@@ -13,7 +42,6 @@ import EmotionDashboard from '@/components/EmotionDashboard';
 import SwipeableChatMessage from '@/components/SwipeableChatMessage';
 import QuickReplies from '@/components/QuickReplies';
 import BreathingExercise from '@/components/BreathingExercise';
-import CameraFeed from '@/components/CameraFeed';
 import { PullToRefreshIndicator } from '@/components/PullToRefresh';
 import BottomNav from '@/components/BottomNav';
 import ScrollToBottomButton from '@/components/ScrollToBottomButton';
@@ -26,37 +54,34 @@ import { useCamera } from '@/hooks/useCamera';
 import { useWebSocketChat } from '@/hooks/useWebSocketChat';
 import { useAccessibility } from '@/context/AccessibilityContext';
 import CustomCursor from '@/components/CustomCursor';
-import RobotMascot from '@/components/RobotMascot';
 import MiniAILogo from '@/components/MiniAILogo';
+import { cn } from '@/lib/utils';
 
-const EMOTION_EMOJIS = {
-  happy: '😊',
-  sad: '😢',
-  angry: '😠',
-  fear: '😨',
-  surprise: '😲',
-  neutral: '😐',
-  disgust: '🤢',
+const EMOTION_STATUS_MAP = {
+  happy: { label: 'Happy', color: 'bg-emerald-500 text-emerald-600', dot: 'bg-emerald-500' },
+  sad: { label: 'Sad', color: 'bg-sky-500 text-sky-600', dot: 'bg-sky-500' },
+  angry: { label: 'Stressed', color: 'bg-rose-500 text-rose-600', dot: 'bg-rose-500' },
+  fear: { label: 'Anxious', color: 'bg-purple-500 text-purple-600', dot: 'bg-purple-500' },
+  surprise: { label: 'Surprised', color: 'bg-amber-500 text-amber-600', dot: 'bg-amber-500' },
+  neutral: { label: 'Neutral', color: 'bg-emerald-500 text-emerald-600', dot: 'bg-emerald-500' },
+  disgust: { label: 'Discomfort', color: 'bg-teal-500 text-teal-600', dot: 'bg-teal-500' },
 };
 
 const Index = () => {
   const [input, setInput] = useState('');
-  // const [isTyping, setIsTyping] = useState(false); // Handled by chat hook
   const [emotion, setEmotion] = useState('neutral');
   const [activeTab, setActiveTab] = useState('chat');
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [breathingOpen, setBreathingOpen] = useState(false);
-  const [showToolbar, setShowToolbar] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  // Liked state is now stored on each message.liked in DB
   const [mobileTab, setMobileTab] = useState('chat');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const chatContainerRef = useRef(null);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
   const [newestMessageId, setNewestMessageId] = useState(null);
-  const { theme, setTheme } = useTheme();
+
+  const { theme, setTheme, toggleLightDark, isDark } = useTheme();
   const { settings } = useAccessibility();
   const messagesEndRef = useRef(null);
   const lastAssistantMsgRef = useRef(null);
@@ -73,21 +98,12 @@ const Index = () => {
     }
   }, [chat.currentEmotion, camera.detectedEmotion]);
 
-  // Restore history on load if chat is empty
-
-
-  // Connect on mount
-  // Moved connection logic to the activeConversation effect to prevent creating duplicate empty chats on load
-  // useEffect(() => {
-  //   chat.connect();
-  // }, []);
-
   const {
     conversations,
     activeConversationId,
     activeConversation,
     startNewConversation,
-    addMessage, // Still useful if we want to save to local history later, but strictly using chat.messages for now
+    addMessage,
     selectConversation,
     deleteConversation,
     clearAllConversations,
@@ -105,7 +121,7 @@ const Index = () => {
   const speechSynthesis = useSpeechSynthesis(speechSynthesisOptions);
 
   const handleRefresh = useCallback(async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
   }, []);
 
   const pullToRefresh = usePullToRefresh({
@@ -114,56 +130,33 @@ const Index = () => {
     maxPull: 120,
   });
 
-  // Use live chat messages instead of stored conversation
   const messages = chat.messages;
 
   // Restore history when active conversation changes
   useEffect(() => {
     if (activeConversation) {
-      // 1. Restore messages to the chat view
       if (activeConversation.messages) {
         chat.restoreMessages(activeConversation.messages);
       } else {
         chat.setMessages([]);
       }
 
-      // 2. Connect/Reconnect WebSocket with the new Chat ID
-      // We check if we are already connected to this chat to avoid unnecessary reconnects
       if (chat.isConnected && chat.currentSessionId === activeConversation.id) {
         // already connected to this session
       } else {
         chat.connect(activeConversation.id);
       }
-    } else {
-      // If no conversation selected (e.g. initial load or all deleted), maybe clear?
-      // But we usually want *some* chat active.
-      // If we have 0 conversations, startNewConversation is called by logic elsewhere?
     }
-  }, [activeConversationId, activeConversation?.id]); // Depend on ID to trigger switch
+  }, [activeConversationId, activeConversation?.id]);
 
-  // Connect on mount - Wait, we should probably wait for a conversation to be active?
-  // The original code connected on mount.
-  // Now we want to connect to a specific chat.
-  // We can let the effect above handle connection if we ensure there's an active convo.
-
-  // Initial load logic:
-  // If conversations exist, select first?
-  // useConversationHistory doesn't auto-select in the new version (it initializes null).
-  // We need an effect here to select one if null.
-
+  // Initial load selection
   useEffect(() => {
     if (!activeConversationId && conversations.length > 0) {
       selectConversation(conversations[0].id);
     }
   }, [conversations, activeConversationId, selectConversation]);
 
-  // Remove the simple onMount connect since we want to drive it by activeConversationId
-  /* 
-  useEffect(() => {
-    chat.connect(); 
-  }, []);
-  */
-
+  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     setShowScrollButton(false);
@@ -180,10 +173,9 @@ const Index = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // Update current emotion from last message
   useEffect(() => {
     if (messages.length > 0) {
-      // Find the last message that actually has an emotion set
-      // (assistant placeholder messages may not have one yet)
       const lastWithEmotion = [...messages].reverse().find(m => m.emotion);
       if (lastWithEmotion) {
         setEmotion(lastWithEmotion.emotion);
@@ -193,16 +185,12 @@ const Index = () => {
     }
   }, [messages]);
 
+  // Auto speak
   useEffect(() => {
     if (!autoSpeak || !settings.soundEnabled) return;
-
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id !== lastAssistantMsgRef.current) {
       lastAssistantMsgRef.current = lastMessage.id;
-      // Wait for stream to finish or simple debounce? 
-      // With streaming, this might speak too early. 
-      // For now, let's keep it simple, or maybe only speak if not typing?
-      // The socket hook updates 'isTyping' to false when response is done.
       if (!chat.isTyping) {
         setTimeout(() => {
           speechSynthesis.speak(lastMessage.content);
@@ -211,22 +199,15 @@ const Index = () => {
     }
   }, [messages, autoSpeak, settings.soundEnabled, speechSynthesis, chat.isTyping]);
 
-  // Sync WebSocket messages to Local History for Insights
+  // Sync to history
   const lastSyncedMsgId = useRef(null);
   useEffect(() => {
     if (messages.length === 0) return;
-
-    // Get the last message
     const lastMsg = messages[messages.length - 1];
-
-    // If we haven't synced this message yet
     if (lastMsg.id !== lastSyncedMsgId.current) {
-      // Ensure we have an active conversation to add to
       if (!activeConversationId) {
         startNewConversation();
       }
-
-      // Add to history
       addMessage(lastMsg);
       lastSyncedMsgId.current = lastMsg.id;
     }
@@ -234,8 +215,8 @@ const Index = () => {
 
   const handleNewConversation = useCallback(() => {
     speechSynthesis.cancel();
-    chat.clearHistory(); // Clear backend memory
-    startNewConversation(); // Create new local session
+    chat.clearHistory();
+    startNewConversation();
     setEmotion('neutral');
   }, [chat, speechSynthesis, startNewConversation]);
 
@@ -245,41 +226,30 @@ const Index = () => {
 
     speechSynthesis.cancel();
 
-    // Ensure there is an active conversation ID before sending
     if (!activeConversationId && conversations.length === 0) {
       await startNewConversation();
     }
 
-    // Capture current frame for fusion
     const frame = camera.captureFrame();
-
-    // Send to backend
     chat.sendMessage(textToSend, frame);
-
     setInput('');
-    // isTyping is handled by chat hook
   }, [input, chat, camera, speechSynthesis, activeConversationId, conversations.length, startNewConversation]);
 
   const handleQuickReply = useCallback((reply) => {
     sendMessage(reply);
   }, [sendMessage]);
 
+  const emotionStatus = EMOTION_STATUS_MAP[emotion] || EMOTION_STATUS_MAP.neutral;
+
   return (
-    <div className="min-h-screen bg-background cursor-none">
+    <div className="min-h-screen bg-[#ebf0f7] dark:bg-[#121620] text-slate-800 dark:text-slate-100 cursor-none transition-colors duration-300">
       <CustomCursor />
       <BreathingExercise isOpen={breathingOpen} onClose={() => setBreathingOpen(false)} />
 
-      <CameraFeed
-        videoRef={camera.videoRef}
-        isEnabled={camera.isEnabled}
-        onToggle={camera.toggleCamera}
-        error={camera.error}
-        detectedEmotion={camera.detectedEmotion}
-        isDetecting={camera.isDetecting}
-      />
-
-      <div className="h-screen flex p-2 sm:p-4 gap-2 sm:gap-4">
-        <div className="hidden md:block">
+      {/* Main Responsive Grid Layout */}
+      <div className="h-screen flex p-3 sm:p-5 gap-4 sm:gap-6 max-w-[1600px] mx-auto">
+        {/* ─── Left Navigation Sidebar (Desktop) ────────────────────── */}
+        <div className="hidden md:flex flex-shrink-0">
           <ConversationHistory
             conversations={conversations}
             activeConversationId={activeConversationId}
@@ -288,56 +258,146 @@ const Index = () => {
             onDeleteConversation={deleteConversation}
             onClearAll={clearAllConversations}
             onRenameConversation={renameConversation}
+            camera={camera}
           />
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-2 overflow-visible relative z-50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <MiniAILogo size={40} />
-                <div>
-                  <h1 className="text-lg font-bold text-primary">EmoFusion</h1>
-                  <p className="text-xs text-muted-foreground">Emotion Healthcare Assistant</p>
-                </div>
+        {/* ─── Right Main Chat Column ───────────────────────────────── */}
+        <main className="flex-1 flex flex-col min-w-0 h-full">
+          {/* ─── Top Floating Neumorphic Header ─────────────────────── */}
+          <header className="flex items-center justify-between px-5 py-3 rounded-[26px] mb-4 bg-[#f0f4f9] dark:bg-[#161a24] shadow-[6px_6px_18px_rgba(166,180,200,0.4),-6px_-6px_18px_rgba(255,255,255,0.95)] dark:shadow-[6px_6px_20px_rgba(8,10,16,0.75),-4px_-4px_14px_rgba(35,42,58,0.3)] transition-all select-none">
+            {/* Robot Mascot & Title */}
+            <div className="flex items-center gap-3">
+              <MiniAILogo size={40} />
+              <div>
+                <h1 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">
+                  EmoFusion
+                </h1>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                  Emotion Healthcare Assistant
+                </p>
+              </div>
+            </div>
+
+            {/* Right Controls */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Mobile Sidebar Trigger */}
+              <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    className="flex md:hidden items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-slate-800 shadow-[2px_2px_6px_rgba(166,180,200,0.35),-2px_-2px_6px_rgba(255,255,255,0.9)] dark:shadow-[2px_2px_6px_rgba(8,10,16,0.7)] text-slate-600 dark:text-slate-300"
+                    aria-label="Open History"
+                  >
+                    <History className="h-4 w-4" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-80 bg-transparent border-0 shadow-none">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Conversation History</SheetTitle>
+                    <SheetDescription>Access your past conversations</SheetDescription>
+                  </SheetHeader>
+                  <ConversationHistory
+                    conversations={conversations}
+                    activeConversationId={activeConversationId}
+                    onSelectConversation={(id) => { selectConversation(id); setHistoryOpen(false); }}
+                    onNewConversation={() => { handleNewConversation(); setHistoryOpen(false); }}
+                    onDeleteConversation={deleteConversation}
+                    onClearAll={clearAllConversations}
+                    onRenameConversation={renameConversation}
+                    camera={camera}
+                  />
+                </SheetContent>
+              </Sheet>
+
+              {/* Status Emotion Pill: ● Neutral */}
+              <div
+                className={cn(
+                  'flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all',
+                  'bg-[#ebf0f7] dark:bg-[#13161f]',
+                  'shadow-[inset_2px_2px_5px_rgba(166,180,200,0.35),inset_-2px_-2px_5px_rgba(255,255,255,0.9)]',
+                  'dark:shadow-[inset_2px_2px_5px_rgba(8,10,16,0.7),inset_-1px_-1px_4px_rgba(35,42,58,0.25)]'
+                )}
+              >
+                <span className={cn('w-2 h-2 rounded-full animate-pulse', emotionStatus.dot)} />
+                <span className="text-slate-700 dark:text-slate-200">{emotionStatus.label}</span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Sheet open={historyOpen} onOpenChange={(open) => {
-                  if (open && navigator.vibrate) navigator.vibrate(10);
-                  setHistoryOpen(open);
-                }}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => navigator.vibrate?.(5)} className="h-9 w-9 rounded-lg text-muted-foreground flex md:hidden active:scale-95 transition-transform" aria-label="Open history">
-                      <History className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="p-0 w-72">
-                    <SheetHeader className="sr-only">
-                      <SheetTitle>Conversation History</SheetTitle>
-                      <SheetDescription>Access your past conversations</SheetDescription>
-                    </SheetHeader>
-                    <ConversationHistory
-                      conversations={conversations}
-                      activeConversationId={activeConversationId}
-                      onSelectConversation={(id) => { navigator.vibrate?.(5); selectConversation(id); setHistoryOpen(false); }}
-                      onNewConversation={() => { navigator.vibrate?.(5); handleNewConversation(); setHistoryOpen(false); }}
-                      onDeleteConversation={deleteConversation}
-                      onClearAll={clearAllConversations}
-                      onRenameConversation={renameConversation}
-                    />
-                  </SheetContent>
-                </Sheet>
+              {/* Quick Light ☀️ / Dark 🌙 Toggle */}
+              <button
+                onClick={toggleLightDark}
+                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-[#ffffff] dark:bg-[#1a202c] text-slate-700 dark:text-amber-400 shadow-[2px_2px_6px_rgba(166,180,200,0.35),-2px_-2px_6px_rgba(255,255,255,0.9)] dark:shadow-[2px_2px_6px_rgba(8,10,16,0.7),-1px_-1px_4px_rgba(35,42,58,0.3)] hover:scale-105 active:scale-95 transition-all"
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
 
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
-                  <span className="text-xl">{EMOTION_EMOJIS[emotion]}</span>
-                  <span className="text-sm capitalize hidden sm:inline">{emotion}</span>
-                </div>
+              {/* More Options Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    title="More Options"
+                    className="flex items-center justify-center w-9 h-9 rounded-full bg-[#ffffff] dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 shadow-[2px_2px_6px_rgba(166,180,200,0.35),-2px_-2px_6px_rgba(255,255,255,0.9)] dark:shadow-[2px_2px_6px_rgba(8,10,16,0.7),-1px_-1px_4px_rgba(35,42,58,0.3)] hover:scale-105 active:scale-95 transition-all"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1.5"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setActiveTab(activeTab === 'chat' ? 'dashboard' : 'chat')}
+                    className="rounded-xl text-xs cursor-pointer py-2"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2.5 text-teal-500" />
+                    <span>{activeTab === 'chat' ? 'View Emotion Insights' : 'Back to Chat'}</span>
+                  </DropdownMenuItem>
 
-                <Button variant="ghost" size="icon" onClick={() => setShowToolbar(!showToolbar)} className={`h-9 w-9 rounded-lg transition-colors ${showToolbar ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`} aria-label="Toggle tools">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                  {speechSynthesis.isSupported && (
+                    <DropdownMenuItem
+                      onClick={() => setAutoSpeak(!autoSpeak)}
+                      className="rounded-xl text-xs cursor-pointer py-2"
+                    >
+                      {autoSpeak ? (
+                        <>
+                          <VolumeX className="h-4 w-4 mr-2.5 text-rose-500" />
+                          <span>Mute Assistant Voice</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="h-4 w-4 mr-2.5 text-teal-500" />
+                          <span>Enable Assistant Voice</span>
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                  )}
 
+                  <DropdownMenuItem
+                    onClick={() => setBreathingOpen(true)}
+                    className="rounded-xl text-xs cursor-pointer py-2"
+                  >
+                    <Wind className="h-4 w-4 mr-2.5 text-sky-500" />
+                    <span>Breathing Exercise</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    onClick={handleNewConversation}
+                    className="rounded-xl text-xs cursor-pointer py-2 text-rose-500 focus:text-rose-500"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2.5" />
+                    <span>Clear Conversation</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Settings Gear Button */}
+              <button
+                onClick={() => setSettingsOpen(true)}
+                title="Open Settings"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-[#ffffff] dark:bg-[#1a202c] text-slate-600 dark:text-slate-300 shadow-[2px_2px_6px_rgba(166,180,200,0.35),-2px_-2px_6px_rgba(255,255,255,0.9)] dark:shadow-[2px_2px_6px_rgba(8,10,16,0.7),-1px_-1px_4px_rgba(35,42,58,0.3)] hover:scale-105 active:scale-95 transition-all"
+              >
                 <SettingsDrawer
                   currentTheme={theme}
                   onThemeChange={setTheme}
@@ -349,63 +409,83 @@ const Index = () => {
                   open={settingsOpen}
                   onOpenChange={setSettingsOpen}
                 />
-              </div>
+              </button>
             </div>
-
-            <AnimatePresence>
-              {showToolbar && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                  <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-border/50">
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)}>
-                      <TabsList className="bg-secondary/50">
-                        <TabsTrigger value="chat" className="gap-2 data-[state=active]:bg-primary/20"><MessageSquare className="h-4 w-4" /><span className="hidden sm:inline">Chat</span></TabsTrigger>
-                        <TabsTrigger value="dashboard" className="gap-2 data-[state=active]:bg-primary/20"><BarChart3 className="h-4 w-4" /><span className="hidden sm:inline">Insights</span></TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                    <div className="w-px h-6 bg-border/50" />
-                    {speechSynthesis.isSupported && (
-                      <Button variant="ghost" size="icon" onClick={() => setAutoSpeak(!autoSpeak)} className={`h-9 w-9 rounded-lg ${autoSpeak ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`} aria-label={autoSpeak ? 'Disable auto-speak' : 'Enable auto-speak'}>
-                        {autoSpeak ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => setBreathingOpen(true)} className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-primary/20 hover:text-primary" aria-label="Open breathing exercise">
-                      <Wind className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </header>
+
+          {/* ─── Main Viewport (Chat or Insights) ──────────────────── */}
           {activeTab === 'chat' ? (
-            <>
+            <div className="flex-1 flex flex-col min-h-0">
+              {/* Scrollable Messages Container */}
               <div
                 ref={(el) => {
                   if (pullToRefresh.containerRef) pullToRefresh.containerRef.current = el;
                   chatContainerRef.current = el;
                 }}
                 onScroll={handleChatScroll}
-                className="relative z-0 flex-1 overflow-y-auto glass-card rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-2 sm:mb-4 scrollbar-thin"
+                className="flex-1 overflow-y-auto px-4 py-4 rounded-[28px] mb-3 bg-transparent scrollbar-soft"
                 style={{
                   transform: pullToRefresh.pullDistance > 0 ? `translateY(${pullToRefresh.pullDistance}px)` : undefined,
                   transition: pullToRefresh.pullDistance === 0 ? 'transform 0.2s ease-out' : undefined,
                 }}
               >
-                <PullToRefreshIndicator pullDistance={pullToRefresh.pullDistance} isRefreshing={pullToRefresh.isRefreshing} progress={pullToRefresh.progress} shouldRefresh={pullToRefresh.shouldRefresh} />
+                <PullToRefreshIndicator
+                  pullDistance={pullToRefresh.pullDistance}
+                  isRefreshing={pullToRefresh.isRefreshing}
+                  progress={pullToRefresh.progress}
+                  shouldRefresh={pullToRefresh.shouldRefresh}
+                />
+
                 {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center">
-                    <RobotMascot size={120} />
-                    <h3 className="text-xl font-semibold mb-2 text-primary select-none">Welcome to EmoFusion</h3>
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 select-none">
+                    <MiniAILogo size={80} className="mb-4 shadow-xl" />
+                    <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">
+                      Welcome to EmoFusion
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed mb-6">
+                      I&apos;m your multimodal emotional healthcare companion. Speak, type, or enable your camera to share how you feel.
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                      {["Tell me a joke 😊", "I'm feeling a bit stressed", "How are you today?"].map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => sendMessage(q)}
+                          className="px-4 py-2 rounded-full text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_rgba(255,255,255,0.9)] dark:shadow-[3px_3px_8px_rgba(8,10,16,0.7)] hover:border-teal-400 hover:text-teal-600 transition-all"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <>
                     {messages.map((msg, index) => (
-                      <SwipeableChatMessage key={msg.id} message={msg} speechSynthesis={speechSynthesis} onDelete={(id) => { deleteMessage(id, index); chat.setMessages(prev => prev.map(m => m.id === id ? { ...m, deleted: true } : m)); }} onFavorite={(id) => { apiService.toggleLikeMessage(activeConversationId, index).catch(console.error); chat.setMessages(prev => prev.map(m => m.id === id ? { ...m, liked: !m.liked } : m)); }} isFavorited={!!msg.liked} isNew={msg.id === newestMessageId && msg.role === 'assistant'} />
+                      <SwipeableChatMessage
+                        key={msg.id}
+                        message={msg}
+                        speechSynthesis={speechSynthesis}
+                        onDelete={(id) => {
+                          deleteMessage(id, index);
+                          chat.setMessages(prev => prev.map(m => m.id === id ? { ...m, deleted: true } : m));
+                        }}
+                        onFavorite={(id) => {
+                          apiService.toggleLikeMessage(activeConversationId, index).catch(console.error);
+                          chat.setMessages(prev => prev.map(m => m.id === id ? { ...m, liked: !m.liked } : m));
+                        }}
+                        isFavorited={!!msg.liked}
+                        isNew={msg.id === newestMessageId && msg.role === 'assistant'}
+                      />
                     ))}
+
+                    {/* Typing Animation */}
                     {chat.isTyping && (
-                      <div className="flex gap-1.5 p-4">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="flex items-center gap-3 mb-4">
+                        <MiniAILogo size={32} />
+                        <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 shadow-[4px_4px_12px_rgba(166,180,200,0.35),-4px_-4px_12px_rgba(255,255,255,0.95)] dark:shadow-[4px_4px_14px_rgba(8,10,16,0.7)] flex gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
                       </div>
                     )}
                     <div ref={messagesEndRef} />
@@ -414,43 +494,41 @@ const Index = () => {
                 <ScrollToBottomButton visible={showScrollButton} onClick={scrollToBottom} />
               </div>
 
-              <div className="flex items-center gap-2 mb-2">
-                <Button variant="ghost" size="sm" onClick={() => setShowSuggestions(!showSuggestions)} className={`gap-2 ${showSuggestions ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
-                  <Lightbulb className="h-4 w-4" /><span className="text-xs">Suggestions</span>
-                </Button>
-              </div>
+              {/* ─── Floating Suggestions Row ──────────────────────── */}
+              <QuickReplies
+                emotion={emotion}
+                onSelect={handleQuickReply}
+                disabled={chat.isTyping}
+              />
 
-              <AnimatePresence>
-                {showSuggestions && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                    <QuickReplies emotion={emotion} onSelect={handleQuickReply} disabled={chat.isTyping} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
+              {/* ─── Neumorphic Capsule Input Bar ──────────────────── */}
               <VoiceChatInput
                 value={input}
                 onChange={setInput}
                 onSend={() => sendMessage()}
                 onStop={chat.stopGeneration}
                 isGenerating={chat.isTyping}
-                disabled={chat.isTyping && !chat.isTyping /* logic fix: we want input disabled but button enabled? No, wait. VoiceChatInput handles disabling internally for the text area. The onStop button should remain enabled. */}
+                disabled={chat.isTyping}
                 placeholder="Type or speak your message..."
               />
-            </>
+            </div>
           ) : (
-            <div className="relative z-0 flex-1 overflow-hidden glass-card rounded-xl sm:rounded-2xl">
+            /* Insights Dashboard View */
+            <div className="flex-1 overflow-hidden rounded-[28px] p-4 bg-[#f0f4f9] dark:bg-[#161a24] shadow-[8px_8px_20px_rgba(166,180,200,0.38),-8px_-8px_20px_rgba(255,255,255,0.95)] dark:shadow-[8px_8px_22px_rgba(8,10,16,0.75)]">
               <EmotionDashboard conversations={conversations} messages={messages} />
             </div>
           )}
-        </div>
+        </main>
       </div>
 
-      <BottomNav activeTab={mobileTab} onTabChange={(tab) => { setMobileTab(tab); if (tab === 'history') setHistoryOpen(true); else if (tab === 'settings') setSettingsOpen(true); }} />
-
-      {/* Duplicate Sheet removed, simplified bottom nav handler */}
-
-      <div className="h-20 md:hidden" />
+      <BottomNav
+        activeTab={mobileTab}
+        onTabChange={(tab) => {
+          setMobileTab(tab);
+          if (tab === 'history') setHistoryOpen(true);
+          else if (tab === 'settings') setSettingsOpen(true);
+        }}
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const MiniAILogo = ({ size = 40 }) => {
+const MiniAILogo = ({ size = 42, className = '' }) => {
     const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
     const logoRef = useRef(null);
 
@@ -13,8 +13,8 @@ const MiniAILogo = ({ size = 40 }) => {
             const dx = e.clientX - centerX;
             const dy = e.clientY - centerY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxOffset = size * 0.055;
-            const factor = Math.min(dist / 200, 1);
+            const maxOffset = size * 0.06;
+            const factor = Math.min(dist / 220, 1);
             const angle = Math.atan2(dy, dx);
             setEyeOffset({
                 x: Math.cos(angle) * maxOffset * factor,
@@ -29,43 +29,44 @@ const MiniAILogo = ({ size = 40 }) => {
     const cx = s / 2;
     const cy = s / 2;
 
-    // Head dimensions - rounded rectangle
-    const headW = s * 0.72;
-    const headH = s * 0.56;
+    const headW = s * 0.74;
+    const headH = s * 0.58;
     const headX = cx - headW / 2;
     const headY = cy - headH / 2 + s * 0.04;
-    const headR = s * 0.1; // corner radius
+    const headR = s * 0.16;
 
-    // Eyes
-    const eyeSpacing = s * 0.15;
-    const eyeY = headY + headH * 0.42;
+    const eyeSpacing = s * 0.16;
+    const eyeY = headY + headH * 0.44;
     const eyeW = s * 0.13;
-    const eyeH = s * 0.1;
-    const pupilR = s * 0.04;
+    const eyeH = s * 0.11;
+    const pupilR = s * 0.045;
 
-    // Antenna
     const antennaX = cx;
-    const antennaTopY = headY - s * 0.1;
+    const antennaTopY = headY - s * 0.12;
     const antennaBotY = headY;
 
-    // Ears
-    const earW = s * 0.06;
-    const earH = s * 0.14;
+    const earW = s * 0.055;
+    const earH = s * 0.16;
 
     return (
         <div
             ref={logoRef}
-            className="flex items-center justify-center"
+            className={`flex items-center justify-center rounded-2xl p-1 bg-[#ffffff] dark:bg-[#1a202c] shadow-[3px_3px_8px_rgba(166,180,200,0.35),-3px_-3px_8px_rgba(255,255,255,0.9)] dark:shadow-[3px_3px_8px_rgba(8,10,16,0.7),-2px_-2px_6px_rgba(38,48,68,0.3)] transition-transform hover:scale-105 ${className}`}
             style={{ width: s, height: s, minWidth: s }}
         >
-            <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
+            <svg width={s * 0.85} height={s * 0.85} viewBox={`0 0 ${s} ${s}`}>
                 <defs>
-                    <linearGradient id="headGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" />
-                        <stop offset="100%" stopColor="hsl(var(--accent))" />
+                    <linearGradient id="robotBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#38bdf8" />
+                        <stop offset="50%" stopColor="#2563eb" />
+                        <stop offset="100%" stopColor="#1d4ed8" />
                     </linearGradient>
-                    <filter id="glow">
-                        <feGaussianBlur stdDeviation="1" result="blur" />
+                    <linearGradient id="robotEyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#2dd4bf" />
+                        <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                    <filter id="robotGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="1.5" result="blur" />
                         <feMerge>
                             <feMergeNode in="blur" />
                             <feMergeNode in="SourceGraphic" />
@@ -77,16 +78,16 @@ const MiniAILogo = ({ size = 40 }) => {
                 <line
                     x1={antennaX} y1={antennaBotY}
                     x2={antennaX} y2={antennaTopY + s * 0.03}
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={s * 0.025}
+                    stroke="#0284c7"
+                    strokeWidth={s * 0.03}
                     strokeLinecap="round"
                 />
-                {/* Antenna ball */}
+                {/* Antenna ball with glow */}
                 <circle
                     cx={antennaX} cy={antennaTopY}
-                    r={s * 0.04}
-                    fill="hsl(var(--primary))"
-                    filter="url(#glow)"
+                    r={s * 0.045}
+                    fill="#38bdf8"
+                    filter="url(#robotGlow)"
                 />
 
                 {/* Left ear */}
@@ -96,8 +97,7 @@ const MiniAILogo = ({ size = 40 }) => {
                     width={earW}
                     height={earH}
                     rx={s * 0.03}
-                    fill="hsl(var(--primary))"
-                    opacity="0.7"
+                    fill="#0284c7"
                 />
 
                 {/* Right ear */}
@@ -107,8 +107,7 @@ const MiniAILogo = ({ size = 40 }) => {
                     width={earW}
                     height={earH}
                     rx={s * 0.03}
-                    fill="hsl(var(--primary))"
-                    opacity="0.7"
+                    fill="#0284c7"
                 />
 
                 {/* Robot head */}
@@ -116,73 +115,71 @@ const MiniAILogo = ({ size = 40 }) => {
                     x={headX} y={headY}
                     width={headW} height={headH}
                     rx={headR} ry={headR}
-                    fill="url(#headGrad)"
+                    fill="url(#robotBlueGrad)"
                 />
 
-                {/* Head inner border */}
+                {/* Face Visor area */}
                 <rect
-                    x={headX + s * 0.02} y={headY + s * 0.02}
-                    width={headW - s * 0.04} height={headH - s * 0.04}
-                    rx={headR * 0.7} ry={headR * 0.7}
-                    fill="none"
-                    stroke="white"
-                    strokeWidth={s * 0.01}
-                    opacity="0.15"
+                    x={headX + s * 0.06}
+                    y={headY + headH * 0.22}
+                    width={headW - s * 0.12}
+                    height={headH * 0.52}
+                    rx={headR * 0.7}
+                    fill="#0f172a"
+                    opacity="0.92"
                 />
 
                 {/* Left eye socket */}
                 <ellipse
                     cx={cx - eyeSpacing} cy={eyeY}
                     rx={eyeW} ry={eyeH}
-                    fill="white"
+                    fill="url(#robotEyeGrad)"
+                    filter="url(#robotGlow)"
                 />
                 {/* Left pupil */}
                 <circle
-                    cx={cx - eyeSpacing + eyeOffset.x * 1.5}
-                    cy={eyeY + eyeOffset.y * 1.5}
+                    cx={cx - eyeSpacing + eyeOffset.x}
+                    cy={eyeY + eyeOffset.y}
                     r={pupilR}
-                    fill="#1a1a2e"
+                    fill="#0f172a"
                 />
                 {/* Left eye shine */}
                 <circle
-                    cx={cx - eyeSpacing + eyeOffset.x * 0.5 - pupilR * 0.5}
-                    cy={eyeY + eyeOffset.y * 0.5 - pupilR * 0.6}
-                    r={pupilR * 0.4}
-                    fill="white"
-                    opacity="0.9"
+                    cx={cx - eyeSpacing + eyeOffset.x - pupilR * 0.4}
+                    cy={eyeY + eyeOffset.y - pupilR * 0.5}
+                    r={pupilR * 0.45}
+                    fill="#ffffff"
                 />
 
                 {/* Right eye socket */}
                 <ellipse
                     cx={cx + eyeSpacing} cy={eyeY}
                     rx={eyeW} ry={eyeH}
-                    fill="white"
+                    fill="url(#robotEyeGrad)"
+                    filter="url(#robotGlow)"
                 />
                 {/* Right pupil */}
                 <circle
-                    cx={cx + eyeSpacing + eyeOffset.x * 1.5}
-                    cy={eyeY + eyeOffset.y * 1.5}
+                    cx={cx + eyeSpacing + eyeOffset.x}
+                    cy={eyeY + eyeOffset.y}
                     r={pupilR}
-                    fill="#1a1a2e"
+                    fill="#0f172a"
                 />
                 {/* Right eye shine */}
                 <circle
-                    cx={cx + eyeSpacing + eyeOffset.x * 0.5 - pupilR * 0.5}
-                    cy={eyeY + eyeOffset.y * 0.5 - pupilR * 0.6}
-                    r={pupilR * 0.4}
-                    fill="white"
-                    opacity="0.9"
+                    cx={cx + eyeSpacing + eyeOffset.x - pupilR * 0.4}
+                    cy={eyeY + eyeOffset.y - pupilR * 0.5}
+                    r={pupilR * 0.45}
+                    fill="#ffffff"
                 />
 
-                {/* Mouth - small grid/speaker lines */}
-                <rect
-                    x={cx - s * 0.1}
-                    y={headY + headH * 0.72}
-                    width={s * 0.2}
-                    height={s * 0.04}
-                    rx={s * 0.02}
-                    fill="white"
-                    opacity="0.4"
+                {/* Friendly Smile Mouth */}
+                <path
+                    d={`M ${cx - s * 0.08} ${headY + headH * 0.84} Q ${cx} ${headY + headH * 0.94} ${cx + s * 0.08} ${headY + headH * 0.84}`}
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth={s * 0.02}
+                    strokeLinecap="round"
                 />
             </svg>
         </div>

@@ -60,16 +60,23 @@ function applyThemeColors(themeData) {
   const { bg, subBg, text, primary, accent } = themeData.colors;
   const isLight = isLightColor(bg);
 
+  // Toggle .dark class for Tailwind dark: variants
+  if (isLight) {
+    root.classList.remove('dark');
+  } else {
+    root.classList.add('dark');
+  }
+
   const bgHSL = hexToHSL(bg);
   const subBgHSL = hexToHSL(subBg);
   const textHSL = hexToHSL(text);
   const primaryHSL = hexToHSL(primary);
   const accentHSL = hexToHSL(accent);
 
-  const mutedBg = hexToHSL(adjustHex(bg, isLight ? -15 : 15));
-  const mutedFg = hexToHSL(adjustHex(text, isLight ? 80 : -80));
-  const borderColor = hexToHSL(adjustHex(bg, isLight ? -25 : 25));
-  const inputColor = hexToHSL(adjustHex(bg, isLight ? -10 : 10));
+  const mutedBg = hexToHSL(adjustHex(bg, isLight ? -10 : 12));
+  const mutedFg = hexToHSL(adjustHex(text, isLight ? 60 : -60));
+  const borderColor = hexToHSL(adjustHex(bg, isLight ? -15 : 18));
+  const inputColor = hexToHSL(adjustHex(bg, isLight ? -8 : 10));
 
   root.style.setProperty('--background', bgHSL);
   root.style.setProperty('--foreground', textHSL);
@@ -79,7 +86,7 @@ function applyThemeColors(themeData) {
   root.style.setProperty('--popover-foreground', textHSL);
   root.style.setProperty('--primary', primaryHSL);
   root.style.setProperty('--primary-foreground', isLightColor(primary) ? hexToHSL(bg) : '0 0% 100%');
-  root.style.setProperty('--secondary', hexToHSL(adjustHex(bg, isLight ? -8 : 20)));
+  root.style.setProperty('--secondary', hexToHSL(adjustHex(bg, isLight ? -6 : 14)));
   root.style.setProperty('--secondary-foreground', textHSL);
   root.style.setProperty('--muted', mutedBg);
   root.style.setProperty('--muted-foreground', mutedFg);
@@ -91,51 +98,56 @@ function applyThemeColors(themeData) {
   root.style.setProperty('--input', inputColor);
   root.style.setProperty('--ring', primaryHSL);
 
+  // Neumorphic Soft Depth Shadows
+  if (isLight) {
+    root.style.setProperty('--neu-bg', bg);
+    root.style.setProperty('--neu-surface', subBg);
+    root.style.setProperty('--neu-flat', '10px 10px 22px rgba(166, 180, 200, 0.45), -10px -10px 22px rgba(255, 255, 255, 0.95)');
+    root.style.setProperty('--neu-flat-sm', '5px 5px 12px rgba(166, 180, 200, 0.35), -5px -5px 12px rgba(255, 255, 255, 0.9)');
+    root.style.setProperty('--neu-inset', 'inset 4px 4px 8px rgba(166, 180, 200, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.95)');
+    root.style.setProperty('--neu-inset-sm', 'inset 2px 2px 5px rgba(166, 180, 200, 0.3), inset -2px -2px 5px rgba(255, 255, 255, 0.9)');
+    root.style.setProperty('--neu-btn', '6px 6px 14px rgba(166, 180, 200, 0.4), -6px -6px 14px rgba(255, 255, 255, 0.9)');
+    root.style.setProperty('--neu-btn-active', 'inset 3px 3px 6px rgba(166, 180, 200, 0.45), inset -3px -3px 6px rgba(255, 255, 255, 0.95)');
+    root.style.setProperty('--neu-glow', '0 6px 20px rgba(45, 212, 191, 0.4)');
+  } else {
+    root.style.setProperty('--neu-bg', bg);
+    root.style.setProperty('--neu-surface', subBg);
+    root.style.setProperty('--neu-flat', '10px 10px 24px rgba(8, 10, 16, 0.75), -8px -8px 20px rgba(38, 48, 68, 0.35)');
+    root.style.setProperty('--neu-flat-sm', '5px 5px 12px rgba(8, 10, 16, 0.7), -4px -4px 10px rgba(38, 48, 68, 0.3)');
+    root.style.setProperty('--neu-inset', 'inset 4px 4px 8px rgba(8, 10, 16, 0.8), inset -4px -4px 8px rgba(38, 48, 68, 0.3)');
+    root.style.setProperty('--neu-inset-sm', 'inset 2px 2px 5px rgba(8, 10, 16, 0.75), inset -2px -2px 5px rgba(38, 48, 68, 0.25)');
+    root.style.setProperty('--neu-btn', '6px 6px 14px rgba(8, 10, 16, 0.75), -5px -5px 12px rgba(38, 48, 68, 0.35)');
+    root.style.setProperty('--neu-btn-active', 'inset 3px 3px 6px rgba(8, 10, 16, 0.85), inset -3px -3px 6px rgba(38, 48, 68, 0.3)');
+    root.style.setProperty('--neu-glow', '0 6px 24px rgba(45, 212, 191, 0.35)');
+  }
+
+  // Card & General Shadows
+  root.style.setProperty('--shadow-card', isLight ? '0 4px 16px rgba(0, 0, 0, 0.05)' : '0 4px 16px rgba(0, 0, 0, 0.4)');
+  root.style.setProperty('--shadow-glow', isLight ? '0 0 20px rgba(20, 184, 166, 0.25)' : '0 0 20px rgba(45, 212, 191, 0.25)');
+
   // Gradients
   root.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${primary}, ${accent})`);
   root.style.setProperty('--gradient-accent', `linear-gradient(135deg, ${accent}, ${primary})`);
   root.style.setProperty('--gradient-background', `linear-gradient(180deg, ${bg}, ${subBg})`);
-
-  // Glass
-  const glassOpacity = isLight ? '0.8' : '0.6';
-  root.style.setProperty('--glass-bg', `${subBgHSL} / ${glassOpacity}`);
-  root.style.setProperty('--glass-border', `${textHSL} / 0.1`);
-
-  // Shadows
-  root.style.setProperty('--shadow-glow', `0 0 40px hsl(${primaryHSL} / 0.3)`);
-  root.style.setProperty('--shadow-neon', `0 0 20px hsl(${primaryHSL} / 0.5), 0 0 40px hsl(${primaryHSL} / 0.3)`);
-  root.style.setProperty('--shadow-card', `0 8px 32px hsl(${bgHSL} / 0.5)`);
 }
 
 export const useTheme = () => {
-  const [theme, setThemeState] = useState('dark-healthcare');
+  const [theme, setThemeState] = useState('emofusion-light');
 
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored) {
-      setThemeState(stored);
-      applyTheme(stored);
-    }
+    const validTheme = THEMES.find(t => t.id === stored) ? stored : 'emofusion-light';
+    setThemeState(validTheme);
+    applyTheme(validTheme);
   }, []);
 
   const applyTheme = (newTheme) => {
     const root = document.documentElement;
-
-    // Remove old data-theme
     root.removeAttribute('data-theme');
-    // Remove inline styles from previous dynamic theme
     root.removeAttribute('style');
 
-    // Find theme in our list
-    const themeData = THEMES.find(t => t.id === newTheme);
-
-    if (themeData?.colors) {
-      // Dynamic color injection
-      applyThemeColors(themeData);
-    } else if (newTheme !== 'dark-healthcare') {
-      // Fallback to data-theme for any CSS-only themes
-      root.setAttribute('data-theme', newTheme);
-    }
+    const themeData = THEMES.find(t => t.id === newTheme) || THEMES[0];
+    applyThemeColors(themeData);
   };
 
   const setTheme = useCallback((newTheme) => {
@@ -144,5 +156,15 @@ export const useTheme = () => {
     applyTheme(newTheme);
   }, []);
 
-  return { theme, setTheme };
+  const toggleLightDark = useCallback(() => {
+    setThemeState((current) => {
+      const isCurrentlyDark = current === 'emofusion-dark' || current.includes('dark') || current === 'cyber-mint' || current === 'nordic-frost';
+      const targetTheme = isCurrentlyDark ? 'emofusion-light' : 'emofusion-dark';
+      localStorage.setItem(THEME_STORAGE_KEY, targetTheme);
+      applyTheme(targetTheme);
+      return targetTheme;
+    });
+  }, []);
+
+  return { theme, setTheme, toggleLightDark, isDark: theme === 'emofusion-dark' || theme === 'cyber-mint' || theme === 'nordic-frost' };
 };
